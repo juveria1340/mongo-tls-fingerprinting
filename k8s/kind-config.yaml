@@ -1,0 +1,7 @@
+# Single-node kind cluster: every pod shares the host clock, so API ground-truth
+# timestamps and tcpdump timestamps line up without NTP work.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: fingerprint
+nodes:
+  - role: control-plane

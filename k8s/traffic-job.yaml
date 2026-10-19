@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata: { name: traffic, namespace: fingerprint }
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: gen
+          image: fp-traffic:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: DURATION_S, value: "1800" }   # 30 min ≈ 15-25k labelled ops
+            - { name: WORKERS, value: "6" }
+            - { name: THINK_MS, value: "400" }

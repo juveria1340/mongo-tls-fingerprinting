@@ -1,0 +1,60 @@
+# MongoDB with TLS required + a tcpdump sidecar sharing its network namespace.
+# The sidecar captures ONLY port 27017 on the Mongo pod's eth0, i.e. exactly the
+# encrypted app<->db traffic an on-path observer (CNI, node, mesh) could see.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: fingerprint
+spec:
+  selector: { app: mongo }
+  ports: [{ port: 27017, targetPort: 27017 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+  namespace: fingerprint
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mongo } }
+  template:
+    metadata: { labels: { app: mongo } }
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7.0
+          args:
+            - --bind_ip_all
+            - --tlsMode=requireTLS
+            - --tlsCertificateKeyFile=/etc/mongo-tls/server.pem
+            - --tlsCAFile=/etc/mongo-tls/ca.pem
+            - --tlsAllowConnectionsWithoutCertificates
+          ports: [{ containerPort: 27017 }]
+          volumeMounts:
+            - { name: tls, mountPath: /etc/mongo-tls, readOnly: true }
+            - { name: data, mountPath: /data/db }
+          readinessProbe:
+            tcpSocket: { port: 27017 }
+            initialDelaySeconds: 5
+        - name: capture
+          image: nicolaka/netshoot:v0.13
+          securityContext:
+            capabilities: { add: [NET_ADMIN, NET_RAW] }
+          # New file name per container start, so a restart never overwrites a capture.
+          command: ["sh", "-c"]
+          args:
+            - >-
+              exec tcpdump -i eth0 -nn -s 0 -U
+              --time-stamp-precision=nano
+              -w /captures/mongo-$(date +%s).pcap
+              'tcp port 27017'
+          volumeMounts:
+            - { name: captures, mountPath: /captures }
+      volumes:
+        - name: tls
+          secret: { secretName: mongo-tls }
+        - name: data
+          emptyDir: {}
+        - name: captures
+          emptyDir: {}
