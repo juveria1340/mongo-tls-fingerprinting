@@ -1,3 +1,4 @@
+[![Board Status](https://dev.azure.com/juveriairam1340/78c0ea06-4400-428e-8df0-9a06269fde14/14bb389a-965c-4085-a71e-0aa14050463d/_apis/work/boardbadge/33f48c97-8c80-49ab-955f-a63c6d6d1ae0)](https://dev.azure.com/juveriairam1340/78c0ea06-4400-428e-8df0-9a06269fde14/_boards/board/t/14bb389a-965c-4085-a71e-0aa14050463d/Microsoft.RequirementCategory)
 # Encrypted MongoDB Traffic Fingerprinting in Kubernetes
 
 **Question:** if traffic between microservices and MongoDB is encrypted with TLS, can someone watching the cluster network still tell *what the database is doing*?
